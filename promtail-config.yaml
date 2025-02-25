@@ -3,7 +3,7 @@ server:
   grpc_listen_port: 9095
 
 clients:
-  - url: http://loki:3100/loki/api/v1/push  # Адрес Loki для отправки логов
+  - url: http://loki:3100/loki/api/v1/push
 
 positions:
   filename: /tmp/positions.yaml
@@ -14,5 +14,22 @@ scrape_configs:
       - targets:
           - localhost
         labels:
-          job: 'docker'  # Логирование с меткой job="docker"
-          __path__: /var/lib/docker/containers/*/*.log  # Путь к логам Docker
+          job: 'docker'
+          __path__: /var/lib/docker/containers/*/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: time
+            level: level
+            message: msg
+      - labels:
+          level:
+          message:
+
+  - job_name: 'nodejs-logs'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'nodejs-app'
+          __path__: /var/log/nodejs/*.log

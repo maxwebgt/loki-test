@@ -4,19 +4,24 @@ const LokiTransport = require('winston-loki');
 // Создаем логгер с транспортом для Loki
 const logger = winston.createLogger({
     level: 'info',
+    format: winston.format.json(),
     transports: [
-        // Стандартный вывод в консоль
         new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.simple()
-            ),
+            format: winston.format.simple()
         }),
-        // Логирование в Loki
         new LokiTransport({
-            host: 'http://loki:3100', // Адрес Loki
-            labels: { job: 'pm2-logs' },
+            host: 'http://loki:3100',
+            labels: {
+                job: 'nodejs-app',
+                environment: 'production',
+                service: 'my-app'
+            },
             json: true,
+            batching: true,
+            interval: 5,
+            format: winston.format.json(),
+            replaceTimestamp: true,
+            onConnectionError: (err) => console.error(err)
         })
     ]
 });

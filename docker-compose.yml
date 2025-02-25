@@ -2,7 +2,7 @@ services:
   app:
     build: ./app
     container_name: my-app
-    command: pm2 start app.js --name "my-app"
+    command: pm2-runtime app.js --name "my-app"
     volumes:
       - ./app:/app
     ports:
