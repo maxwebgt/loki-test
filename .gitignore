@@ -1,5 +1,6 @@
 loki/data/*
 loki/index/
 loki/chunks/
+loki/cache/
 node_modules/
 loki/wal/

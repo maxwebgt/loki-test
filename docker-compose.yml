@@ -18,7 +18,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-        tag: "{{.Name}}"
+        tag: "{{.Name}}/{{.ImageName}}"
     networks:
       - logging
 
@@ -27,6 +27,7 @@ services:
     container_name: promtail
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./promtail-config.yaml:/etc/promtail/promtail-config.yaml
     command:
       -config.file=/etc/promtail/promtail-config.yaml
@@ -59,6 +60,7 @@ services:
     volumes:
       - ./grafana/dashboards:/var/lib/grafana/dashboards
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
     networks:
       - logging
 
