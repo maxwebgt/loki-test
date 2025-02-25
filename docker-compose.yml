@@ -6,7 +6,7 @@ services:
     volumes:
       - ./app:/app
     ports:
-      - "3000:3000"  # Ваше приложение будет доступно на порту 3000
+      - "3000:3000"
     depends_on:
       - loki
       - promtail
@@ -51,23 +51,30 @@ services:
     networks:
       - logging
 
-
   grafana:
     image: grafana/grafana:9.0.0
     container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     ports:
-      - "3001:3000"  # Grafana будет доступен на порту 3001
+      - "3001:3000"
     restart: always
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - loki
     networks:
       - logging
+
 volumes:
   grafana-storage:
+
 networks:
   logging:
     driver: bridge

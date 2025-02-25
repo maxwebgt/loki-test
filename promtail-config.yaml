@@ -19,17 +19,15 @@ scrape_configs:
     pipeline_stages:
       - json:
           expressions:
-            timestamp: time
             level: level
-            message: msg
+            message: message
+            timestamp: time
+            logger: logger
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
       - labels:
           level:
-          message:
-
-  - job_name: 'nodejs-logs'
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: 'nodejs-app'
-          __path__: /var/log/nodejs/*.log
+          logger:
+      - output:
+          source: message
