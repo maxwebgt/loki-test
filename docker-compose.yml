@@ -44,13 +44,8 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./loki/config:/etc/loki
       - ./loki/data:/loki
-      - ./loki/wal:/wal
-      - ./loki/chunks:/chunks
-      - ./loki/compactor:/compactor
-      - ./loki/rules:/rules    # Добавляем директорию для правил
-      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml
     command: "-config.file=/etc/loki/local-config.yaml"
     restart: unless-stopped
     networks:
