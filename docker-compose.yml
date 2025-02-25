@@ -1,0 +1,78 @@
+services:
+  app:
+    build: ./app
+    container_name: my-app
+    command: pm2 start app.js --name "my-app"
+    volumes:
+      - ./app:/app
+    ports:
+      - "3000:3000"  # Ваше приложение будет доступно на порту 3000
+    depends_on:
+      - loki
+      - promtail
+    environment:
+      - NODE_ENV=production
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - logging
+
+  promtail:
+    image: grafana/promtail:2.4.1
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+      - ./promtail-config.yaml:/etc/promtail/promtail-config.yaml
+    restart: always
+    command:
+      -config.file=/etc/promtail/promtail-config.yaml
+    depends_on:
+      - loki
+    networks:
+      - logging
+
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    user: "root"
+    environment:
+      - LOKI_STORAGE_PATH=/loki/data
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/config:/etc/loki
+      - ./loki/data:/loki
+      - ./loki/wal:/wal
+      - ./loki/chunks:/chunks
+      - ./loki/compactor:/compactor
+      - ./loki/rules:/rules    # Добавляем директорию для правил
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+    command: "-config.file=/etc/loki/local-config.yaml"
+    restart: unless-stopped
+    networks:
+      - logging
+
+
+  grafana:
+    image: grafana/grafana:9.0.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3001:3000"  # Grafana будет доступен на порту 3001
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - loki
+    networks:
+      - logging
+volumes:
+  grafana-storage:
+networks:
+  logging:
+    driver: bridge
