@@ -3,40 +3,45 @@ const logger = require('./logger');
 const app = express();
 const port = 3000;
 
-// Middleware для логирования запросов
+// Тестовый console.log
+console.log('Приложение запускается...');
+console.error('Тестовая ошибка через console.error');
+
+// Middleware для логирования всех запросов через console.log
 app.use((req, res, next) => {
-    logger.info('Входящий запрос', {
-        method: req.method,
-        path: req.path,
-        ip: req.ip
-    });
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
 
-// Тестовый эндпоинт
+// Тестовый endpoint с обоими типами логов
 app.get('/', (req, res) => {
-    logger.info('Запрос к корневому пути');
+    // Winston лог
+    logger.info('Запрос к корневому пути через winston');
+
+    // Console.log
+    console.log('Запрос к корневому пути через console.log');
+
     res.send('Hello World!');
 });
 
-// Периодическая отправка тестовых логов
+// Тестовый endpoint для ошибок
+app.get('/error', (req, res) => {
+    // Winston error
+    logger.error('Тестовая ошибка через winston');
+
+    // Console.error
+    console.error('Тестовая ошибка через console.error');
+
+    res.status(500).send('Test Error');
+});
+
+// Периодический вывод логов обоими способами
 setInterval(() => {
-    console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
-    logger.info('Тестовое сообщение', {
-        timestamp: new Date().toISOString(),
-        status: 'running'
-    });
-}, 10000);
+    console.log('Периодический лог через console.log');
+    logger.info('Периодический лог через winston');
+}, 30000);
 
 app.listen(port, () => {
-    logger.info(`Приложение запущено на порту ${port}`);
-});
-
-// Обработка необработанных исключений
-process.on('uncaughtException', (error) => {
-    logger.error('Необработанное исключение:', error);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Необработанное отклонение промиса:', reason);
+    console.log(`Сервер запущен на порту ${port}`);
+    logger.info(`Сервер запущен на порту ${port} (winston)`);
 });

@@ -12,5 +12,5 @@ COPY . .
 # Установка зависимостей
 RUN npm install
 
-# Использование pm2-runtime вместо pm2
-CMD ["pm2-runtime", "app.js"]
+# Важно: используем pm2-runtime вместо pm2
+CMD ["pm2-runtime", "app.js", "--no-daemon", "--merge-logs", "--log-date-format", "YYYY-MM-DD HH:mm:ss.SSS"]
