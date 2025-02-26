@@ -25,6 +25,20 @@ services:
     networks:
       - monitoring
 
+  app-test:
+    build: 
+      context: ./app
+      target: test
+    container_name: my-app-test
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    command: npm run test
+    environment:
+      - NODE_ENV=test
+    networks:
+      - monitoring
+
   mongodb:
     image: mongo:latest
     container_name: mongodb

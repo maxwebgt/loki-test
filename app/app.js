@@ -1,5 +1,6 @@
 const express = require('express');
 const promClient = require('prom-client');
+const logger = require('./logger');
 const app = express();
 
 // Создаем реестр метрик
@@ -101,6 +102,39 @@ app.get('/metrics', async (req, res) => {
     res.send(await register.metrics());
 });
 
+// Эндпоинт для генерации логов
+app.get('/generate-logs', (req, res) => {
+    // Parse query parameters with defaults
+    const count = parseInt(req.query.count) || 5;
+    const level = req.query.level || 'all';
+    
+    const levels = ['debug', 'info', 'warn', 'error'];
+    const generatedLogs = [];
+    
+    // Generate the specified number of logs
+    for (let i = 0; i < count; i++) {
+        // If specific level requested, use only that level, otherwise use random levels
+        const logLevel = level !== 'all' ? level : levels[Math.floor(Math.random() * levels.length)];
+        
+        // Generate and record the log message
+        const message = logger.generateRandomLog(logLevel);
+        logger[logLevel](message);
+        
+        generatedLogs.push({
+            level: logLevel,
+            message: message,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    res.locals.data = {
+        message: `Generated ${count} logs`,
+        logs: generatedLogs
+    };
+    
+    res.json(res.locals.data);
+});
+
 // Тестовые эндпоинты
 // Обновляем корневой маршрут для отображения HTML страницы
 app.get('/', (req, res) => {
@@ -150,6 +184,12 @@ app.get('/', (req, res) => {
             .api-button.error:hover {
                 background-color: #d32f2f;
             }
+            .api-button.logs {
+                background-color: #FF9800;
+            }
+            .api-button.logs:hover {
+                background-color: #F57C00;
+            }
             #response {
                 margin-top: 20px;
                 padding: 15px;
@@ -171,9 +211,11 @@ app.get('/', (req, res) => {
             Current UTC Time: ${new Date().toISOString().replace('T', ' ').slice(0, 19)}
         </div>
         <div class="button-container">
-            <button class="api-button" onclick="callApi('/')">Test Normal Response (GET /)</button>
+            <button class="api-button" onclick="callApi('/api/normal')">Test Normal Response (GET /api/normal)</button>
             <button class="api-button slow" onclick="callApi('/slow')">Test Slow Response (GET /slow)</button>
             <button class="api-button error" onclick="callApi('/error')">Test Error Response (GET /error)</button>
+            <button class="api-button logs" onclick="callApi('/generate-logs')">Generate Logs (GET /generate-logs)</button>
+            <button class="api-button logs" onclick="callApi('/generate-logs?level=error&count=10')">Generate Error Logs (10)</button>
         </div>
         <div>
             <h3>Response:</h3>
@@ -208,6 +250,15 @@ app.get('/', (req, res) => {
     res.send(html);
 });
 
+// Новый маршрут для нормального JSON ответа
+app.get('/api/normal', (req, res) => {
+    res.locals.data = {
+        message: 'Normal response',
+        timestamp: new Date().toISOString()
+    };
+    res.json(res.locals.data);
+});
+
 // Обновляем маршрут /slow для более информативного ответа
 app.get('/slow', async (req, res) => {
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -233,3 +284,5 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+module.exports = app;

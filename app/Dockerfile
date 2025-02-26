@@ -1,16 +1,17 @@
-FROM node:16
-
+# Базовый образ
+FROM node:16 as base
 WORKDIR /app
-
-# Установка PM2 глобально
-RUN npm install pm2 -g
-
-# Копирование файлов приложения
 COPY package*.json ./
+RUN npm install
 COPY . .
 
-# Установка зависимостей
-RUN npm install
+# Образ для тестирования
+FROM base as test
+ENV NODE_ENV=test
+CMD ["npm", "run", "test"]
 
-# Важно: используем pm2-runtime вместо pm2
-CMD ["pm2-runtime", "app.js", "--no-daemon", "--merge-logs", "--log-date-format", "YYYY-MM-DD HH:mm:ss.SSS"]
+# Продакшн образ
+FROM base as production
+ENV NODE_ENV=production
+RUN npm install pm2 -g
+CMD ["pm2-runtime", "app.js", "--no-daemon", "--merge-logs"]
