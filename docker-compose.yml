@@ -41,6 +41,36 @@ services:
     restart: always
     command: ["mongod", "--config", "/etc/mongod.conf"]
 
+  mongodb-exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: mongodb-exporter
+    ports:
+      - "9216:9216"
+    command: --mongodb.uri=mongodb://root:example@mongodb:27017/admin
+    depends_on:
+      - mongodb
+    networks:
+      - monitoring
+    restart: always
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
+    restart: always
+
   promtail:
     image: grafana/promtail:2.4.1
     container_name: promtail
@@ -92,6 +122,7 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/metrics-dashboard.json
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-clock-panel,grafana-polystat-panel
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro

@@ -15,21 +15,55 @@
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
       "targets": [
         {
-          "expr": "rate(http_requests_total[5m])",
+          "expr": "sum by(method, route) (rate(http_requests_total[5m]))",
           "legendFormat": "{{method}} {{route}}"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          }
+        }
+      }
     },
     {
-      "title": "HTTP Response Time",
+      "title": "HTTP Response Time (avg)",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
       "targets": [
         {
-          "expr": "rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])",
+          "expr": "sum by(method, route) (rate(http_request_duration_seconds_sum[5m])) / sum by(method, route) (rate(http_request_duration_seconds_count[5m]))",
           "legendFormat": "{{method}} {{route}}"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": null, "color": "green"},
+              {"value": 0.1, "color": "yellow"},
+              {"value": 0.5, "color": "orange"},
+              {"value": 1, "color": "red"}
+            ]
+          },
+          "unit": "s"
+        }
+      }
     },
     {
       "title": "Memory Usage",
@@ -40,7 +74,20 @@
           "expr": "process_resident_memory_bytes",
           "legendFormat": "Memory Usage"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "bytes"
+        }
+      }
     },
     {
       "title": "CPU Usage",
@@ -48,25 +95,73 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
       "targets": [
         {
-          "expr": "rate(process_cpu_user_seconds_total[5m])",
+          "expr": "sum(rate(process_cpu_user_seconds_total[5m])) * 100",
           "legendFormat": "CPU User"
         },
         {
-          "expr": "rate(process_cpu_system_seconds_total[5m])",
+          "expr": "sum(rate(process_cpu_system_seconds_total[5m])) * 100",
           "legendFormat": "CPU System"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "percent"
+        }
+      }
     },
     {
-      "title": "HTTP Error Rate",
+      "title": "HTTP Status Codes",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
       "targets": [
         {
-          "expr": "rate(http_requests_total{status_code=~\"5.*\"}[5m])",
-          "legendFormat": "{{method}} {{route}}"
+          "expr": "sum by(status_code) (rate(http_requests_total[5m]))",
+          "legendFormat": "{{status_code}}"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "2xx": {
+                  "color": "green",
+                  "index": 0
+                },
+                "3xx": {
+                  "color": "blue",
+                  "index": 1
+                },
+                "4xx": {
+                  "color": "orange",
+                  "index": 2
+                },
+                "5xx": {
+                  "color": "red",
+                  "index": 3
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "title": "Active Users",
@@ -74,7 +169,7 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
       "targets": [
         {
-          "expr": "app_active_users",
+          "expr": "sum(nodejs_active_handles)",
           "legendFormat": "Active Users"
         }
       ],
@@ -82,49 +177,318 @@
         "minValue": 0,
         "maxValue": 100,
         "orientation": "auto",
-        "reduction": "mean"
+        "reduction": "mean",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            { "value": null, "color": "green" },
+            { "value": 50, "color": "yellow" },
+            { "value": 80, "color": "red" }
+          ]
+        }
       }
     },
     {
-      "title": "HTTP Request Size",
+      "title": "Nodejs Event Loop Lag",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
       "targets": [
         {
-          "expr": "rate(http_request_size_bytes_sum[5m]) / rate(http_request_size_bytes_count[5m])",
-          "legendFormat": "{{method}} {{route}}"
+          "expr": "nodejs_eventloop_lag_seconds",
+          "legendFormat": "Event Loop Lag"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 0.1, "color": "yellow" },
+              { "value": 0.5, "color": "red" }
+            ]
+          }
+        }
+      }
     },
     {
-      "title": "HTTP Response Size",
+      "title": "GC Duration",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
       "targets": [
         {
-          "expr": "rate(http_response_size_bytes_sum[5m]) / rate(http_response_size_bytes_count[5m])",
-          "legendFormat": "{{method}} {{route}}"
+          "expr": "rate(nodejs_gc_duration_seconds_sum[5m])",
+          "legendFormat": "GC Duration"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "title": "File Descriptors",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+      "targets": [
+        {
+          "expr": "process_open_fds",
+          "legendFormat": "Open FDs"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          }
+        }
+      }
+    },
+    {
+      "title": "Network Traffic",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+      "targets": [
+        {
+          "expr": "sum(rate(node_network_receive_bytes_total[5m]))",
+          "legendFormat": "Network In"
+        },
+        {
+          "expr": "sum(rate(node_network_transmit_bytes_total[5m]))",
+          "legendFormat": "Network Out"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "title": "MongoDB Operations",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40},
+      "targets": [
+        {
+          "expr": "sum(rate(mongodb_op_counters_total[5m]))",
+          "legendFormat": "Operations"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          }
+        }
+      }
+    },
+    {
+      "title": "MongoDB Connections",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+      "targets": [
+        {
+          "expr": "mongodb_connections",
+          "legendFormat": "Connections"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Application Logs (last 100)",
+      "type": "logs",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 48},
+      "targets": [
+        {
+          "expr": "{job=\"docker\", container_name=\"my-app\"} | json",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      }
+    },
+    {
+      "title": "Error Logs",
+      "type": "logs",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 56},
+      "targets": [
+        {
+          "expr": "{job=\"docker\", container_name=\"my-app\"} |= \"error\" | json",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      }
+    },
+    {
+      "title": "Heap Usage",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 64},
+      "targets": [
+        {
+          "expr": "nodejs_heap_size_total_bytes",
+          "legendFormat": "Heap Total"
+        },
+        {
+          "expr": "nodejs_heap_size_used_bytes",
+          "legendFormat": "Heap Used"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "bytes"
+        }
+      }
+    },
+    {
+      "title": "HTTP Response Sizes",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 64},
+      "targets": [
+        {
+          "expr": "sum by(route) (rate(http_response_size_bytes_sum[5m]) / rate(http_response_size_bytes_count[5m]))",
+          "legendFormat": "{{route}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 20,
+            "lineWidth": 2,
+            "spanNulls": false
+          },
+          "unit": "bytes"
+        }
+      }
     }
   ],
-  "refresh": "5s",
+  "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": ["nodejs", "monitoring"],
   "templating": {
     "list": [
       {
         "name": "route",
         "type": "query",
         "datasource": "Prometheus",
-        "query": "label_values(http_requests_total, route)"
+        "query": "label_values(http_requests_total, route)",
+        "refresh": 2
+      },
+      {
+        "name": "container",
+        "type": "query",
+        "datasource": "Loki",
+        "query": "label_values(container_name)",
+        "refresh": 2
       }
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-30m",
     "to": "now"
   },
-  "title": "Node.js Application Metrics"
+  "title": "Node.js Application Metrics",
+  "version": 1,
+  "description": "Comprehensive dashboard for monitoring Node.js applications"
 }
