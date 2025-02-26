@@ -6,7 +6,8 @@
     "start": "pm2 start app.js --name 'my-app'"
   },
   "dependencies": {
-    "express": "^4.21.2",
+    "express": "^4.17.1",
+    "prom-client": "^14.0.1",
     "pm2": "^5.1.2",
     "winston": "^3.3.3",
     "winston-loki": "^6.1.3"

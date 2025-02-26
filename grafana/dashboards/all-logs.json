@@ -12,7 +12,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "Loki"
       },
       "gridPos": {
         "h": 8,
@@ -35,19 +35,20 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "Loki"
           },
-          "expr": "{container_name=\"my-app\"}",
-          "refId": "A"
+          "editorMode": "code",
+          "expr": "{job=\"docker\"} | json",
+          "queryType": "range"
         }
       ],
-      "title": "All Container Logs",
+      "title": "All Containers Logs",
       "type": "logs"
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "Loki"
       },
       "gridPos": {
         "h": 8,
@@ -70,19 +71,20 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "Loki"
           },
-          "expr": "{container_name=\"my-app\", stream=\"stdout\"}",
-          "refId": "A"
+          "editorMode": "code",
+          "expr": "{job=\"docker\"} | json | stream=\"stdout\"",
+          "queryType": "range"
         }
       ],
-      "title": "Console.log Output",
+      "title": "Standard Output (stdout)",
       "type": "logs"
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "Loki"
       },
       "gridPos": {
         "h": 8,
@@ -105,13 +107,50 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "Loki"
           },
-          "expr": "{container_name=\"my-app\", stream=\"stderr\"}",
-          "refId": "A"
+          "editorMode": "code",
+          "expr": "{job=\"docker\"} | json | stream=\"stderr\"",
+          "queryType": "range"
         }
       ],
-      "title": "Console.error Output",
+      "title": "Error Output (stderr)",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "Loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 4,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"docker\"} |~ \"(?i)error|exception|fail|fatal\"",
+          "queryType": "range"
+        }
+      ],
+      "title": "Errors and Exceptions (All Containers)",
       "type": "logs"
     }
   ],
@@ -120,7 +159,30 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": ".*"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Container",
+        "multi": false,
+        "name": "container",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": ".*"
+          }
+        ],
+        "query": ".*",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -128,7 +190,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "All Application Logs",
-  "version": 1,
+  "title": "Docker Containers Logs",
+  "version": 2,
   "weekStart": ""
 }
