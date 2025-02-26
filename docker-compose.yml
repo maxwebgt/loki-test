@@ -11,8 +11,10 @@ services:
       - loki
       - promtail
       - prometheus
+      - mongodb
     environment:
       - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/myapp
     restart: always
     logging:
       driver: "json-file"
@@ -22,6 +24,22 @@ services:
         tag: "{{.Name}}/{{.ImageName}}"
     networks:
       - monitoring
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+      - ./mongod.conf:/etc/mongod.conf
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    networks:
+      - monitoring
+    restart: always
+    command: ["mongod", "--config", "/etc/mongod.conf"]
 
   promtail:
     image: grafana/promtail:2.4.1
@@ -91,3 +109,4 @@ networks:
 volumes:
   grafana-data:
   prometheus-data:
+  mongodb-data:
